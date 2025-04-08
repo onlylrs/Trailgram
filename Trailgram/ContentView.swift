@@ -8,14 +8,32 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var store = MemoryStore()
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView {
+            NavigationStack {
+                MapView()
+            }
+            .tabItem {
+                Label("Map", systemImage: "map")
+            }
+
+            NavigationStack {
+                Text("List View Coming Soon")
+            }
+            .tabItem {
+                Label("List", systemImage: "list.bullet")
+            }
+
+            NavigationStack {
+                Text("Profile Coming Soon")
+            }
+            .tabItem {
+                Label("Profile", systemImage: "person.crop.circle")
+            }
         }
-        .padding()
+        .environment(store)
     }
 }
 

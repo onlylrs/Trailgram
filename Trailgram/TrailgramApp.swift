@@ -9,9 +9,13 @@ import SwiftUI
 
 @main
 struct TrailgramApp: App {
+    @State private var store = MemoryStore()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+//            MapView()
+//                .environment(store)
         }
     }
 }

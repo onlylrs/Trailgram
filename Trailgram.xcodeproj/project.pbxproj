@@ -29,9 +29,22 @@
 		88DBDE6A2DA5BD4E00B3F27C /* TrailgramUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrailgramUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		88DBDEAC2DA5DA5B00B3F27C /* Exceptions for "Trailgram" folder in "Trailgram" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 88DBDE522DA5BD4D00B3F27C /* Trailgram */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		88DBDE552DA5BD4D00B3F27C /* Trailgram */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				88DBDEAC2DA5DA5B00B3F27C /* Exceptions for "Trailgram" folder in "Trailgram" target */,
+			);
 			path = Trailgram;
 			sourceTree = "<group>";
 		};
@@ -397,6 +410,9 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Trailgram/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Your location is needed.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is needed!";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -424,6 +440,9 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Trailgram/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Your location is needed.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is needed!";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
