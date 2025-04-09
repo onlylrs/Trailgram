@@ -50,10 +50,9 @@ class SearchDelegateWrapper: NSObject, MKLocalSearchCompleterDelegate {
 
 struct LocationSearchView: View {
     @Environment(\.dismiss) var dismiss
-    @Binding var selectedCoordinate: CLLocationCoordinate2D?
-
     @State private var queryFragment = ""
-    var searchManager = LocalSearchManager() // ✅ 使用现代 Observable
+    var searchManager = LocalSearchManager()
+    var onSelect: (CLLocationCoordinate2D) -> Void
 
     var body: some View {
         NavigationView {
@@ -86,16 +85,12 @@ struct LocationSearchView: View {
 
         search.start { response, error in
             if let coordinate = response?.mapItems.first?.placemark.coordinate {
-                selectedCoordinate = coordinate
+                onSelect(coordinate)
                 dismiss()
             }
         }
     }
 
-    // ✅ 保留你之前添加的构造器
-    init(selectedCoordinate: Binding<CLLocationCoordinate2D?>) {
-        self._selectedCoordinate = selectedCoordinate
-    }
 }
 
 

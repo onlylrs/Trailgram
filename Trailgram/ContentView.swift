@@ -9,33 +9,34 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var store = MemoryStore()
+    @State private var folderStore = FolderStore()
+    @State private var selectedTab: Tab = .map
+
+    enum Tab {
+        case map, list, profile
+    }
 
     var body: some View {
-        TabView {
-            NavigationStack {
+        NavigationStack {
+            TabView(selection: $selectedTab) {
                 MapView()
-            }
-            .tabItem {
-                Label("Map", systemImage: "map")
-            }
+                    .tabItem { Label("Map", systemImage: "map") }
+                    .tag(Tab.map)
 
-            NavigationStack {
-                Text("List View Coming Soon")
-            }
-            .tabItem {
-                Label("List", systemImage: "list.bullet")
-            }
+                FolderListView()
+                    .tabItem { Label("List", systemImage: "list.bullet") }
+                    .tag(Tab.list)
 
-            NavigationStack {
-                Text("Profile Coming Soon")
-            }
-            .tabItem {
-                Label("Profile", systemImage: "person.crop.circle")
+                Text("Profile coming soon")
+                    .tabItem { Label("Profile", systemImage: "person") }
+                    .tag(Tab.profile)
             }
         }
         .environment(store)
+        .environment(folderStore)
     }
 }
+
 
 #Preview {
     ContentView()

@@ -9,16 +9,17 @@ import SwiftUI
 import CoreLocation
 
 struct AddMemoryView: View {
-    @Environment(MemoryStore.self) var store
+    @Environment(FolderStore.self) var folderStore
     @Environment(\.dismiss) var dismiss
 
     @State private var title: String = ""
-    @State private var description: String = ""
-    @State private var coordinate: CLLocationCoordinate2D?
-    // ✅ 新增控制状态
-    @State private var showingLocationOptions = false
-    @State private var showingSearch = false // 🔜 搜索功能后面实现
-    @State private var showingSearchSheet = false
+    @State private var note: String = ""
+    @State private var useCurrentLocation: Bool = true
+    @State private var selectedCoordinate: CLLocationCoordinate2D?
+    @State private var selectedFolderID: UUID?
+    @State private var showSearchView = false
+    @State private var showFolderPicker = false
+    @State private var readableAddress: String = ""
     
     var body: some View {
         Form {
@@ -26,81 +27,98 @@ struct AddMemoryView: View {
                 TextField("Enter a title", text: $title)
             }
 
-            Section(header: Text("Description")) {
-                TextEditor(text: $description)
-                    .frame(minHeight: 100)
+            Section(header: Text("Note")) {
+                TextEditor(text: $note)
+                    .frame(height: 100)
             }
 
-            // ✅ 改为按钮 + 弹窗控制
             Section(header: Text("Location")) {
+                Button("Use Current Location") {
+                    requestCurrentLocation()
+                }
+
+                Button("Search Location") {
+                    showSearchView = true
+                }
+
+                if let coord = selectedCoordinate {
+                    Label(readableAddress, systemImage: "mappin.and.ellipse")
+                        .font(.callout)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+
+            Section(header: Text("Choose Folder")) {
                 Button {
-                    showingLocationOptions = true
-                } label: {
-                    if let coord = coordinate {
-                        VStack(alignment: .leading) {
-                            Text("📍 Location Selected")
-                                .font(.headline)
-                            Text("Lat: \(coord.latitude)")
-                            Text("Lon: \(coord.longitude)")
-                                .foregroundColor(.secondary)
-                        }
-                    } else {
-                        Text("➕ Select Location")
+                    showFolderPicker = true
+                } label:{
+                    Text(folderStore.name(for: selectedFolderID) ?? "Select Folder")
+                        .foregroundStyle(.orange)
+                }
+            }
+
+
+            Section {
+                Button("Save Memory Spot") {
+                    save()
+                    dismiss()
+                }
+                .disabled(title.isEmpty || selectedCoordinate == nil || selectedFolderID == nil)
+            }
+        }
+        .navigationTitle("New Spot")
+        .onAppear {
+            requestCurrentLocation()
+            if selectedFolderID == nil {
+                    selectedFolderID = folderStore.folders.first?.id
+                }
+        }
+        .sheet(isPresented: $showSearchView) {
+            LocationSearchView { coord in
+                    selectedCoordinate = coord
+                    reverseGeocode(coord) { address in
+                        readableAddress = address
                     }
+                    showSearchView = false
                 }
-            }
-
-            Button("Save") {
-                saveMemory()
-            }
-            .disabled(title.isEmpty || coordinate == nil)
-            // ✅ 选择方式弹窗
-            .confirmationDialog("Choose Location Method", isPresented: $showingLocationOptions) {
-                Button("📍 Use Current Location") {
-                    Task { await fetchLocation() }
-                }
-                Button("🔍 Search Location") {
-                    showingSearchSheet = true
-                }
-                Button("Cancel", role: .cancel) {}
-            }
         }
-        .navigationTitle("Add Memory")
-        .task {
-            await fetchLocation()
-        }
-        .sheet(isPresented: $showingSearchSheet) {
-            LocationSearchView(selectedCoordinate: $coordinate)
+        .sheet(isPresented: $showFolderPicker) {
+            FolderPickerView { id in
+                selectedFolderID = id
+                showFolderPicker = false //有点问题
+            }
         }
     }
 
-    func saveMemory() {
-        guard let coord = coordinate else { return }
+    func save() {
+        guard let coord = selectedCoordinate,
+              let folderID = selectedFolderID else { return }
 
-        let newSpot = MemorySpot(
-            title: title,
-            description: description,
-            coordinate: coord,
-            date: Date()
-        )
+        let newSpot = MemorySpot(title: title, description: note, coordinate: coord)
 
-        store.memorySpots.append(newSpot)
-        store.focusCoordinate = EquatableCoordinate(coordinate: coord)
-        store.hasJustAddedSpot = true
-        store.shouldLocateOnLaunch = false
-        dismiss()
+        for i in 0..<folderStore.folders.count {
+            if folderStore.folders[i].id == folderID {
+                folderStore.folders[i].spots.append(newSpot)
+                folderStore.save()
+                folderStore.focusCoordinate = CoordinateWrapper(coordinate: coord)
+                break
+            }
+        }
     }
 
-    func fetchLocation() async {
+    func requestCurrentLocation() {
         let manager = CLLocationManager()
         manager.requestWhenInUseAuthorization()
-
         if let location = manager.location {
-            coordinate = location.coordinate
+            let coord = location.coordinate
+                    selectedCoordinate = coord
+                    reverseGeocode(coord) { address in
+                        readableAddress = address
+                    }
         }
     }
 }
-
 
 
 #Preview {

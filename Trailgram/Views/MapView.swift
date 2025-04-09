@@ -7,27 +7,46 @@
 
 import SwiftUI
 import MapKit
+struct SpotAnnotation: View {
+    let spot: MemorySpot
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack {
+                Text("📍")
+                Text(spot.title)
+                    .font(.caption)
+                    .bold()
+            }
+            .padding(6)
+            .background(.ultraThinMaterial)
+            .cornerRadius(12)
+        }
+    }
+}
+
 
 struct MapView: View {
     @Environment(MemoryStore.self) var store
+    @Environment(FolderStore.self) var folderStore
 
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var isAddingMemory = false
-
+    @State private var selectedSpot: SelectedSpot? = nil
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             Map(position: $cameraPosition) {
-                ForEach(store.memorySpots) { spot in
+                ForEach(folderStore.allSpots) { spot in
                     Annotation(spot.title, coordinate: spot.coordinate) {
-                        VStack {
-                            Text("📍")
-                            Text(spot.title)
-                                .font(.caption)
-                                .bold()
+                        SpotAnnotation(spot: spot) {
+                            print("🟢 Annotation clicked: \(spot.title)")
+                                if let folderID = folderStore.findFolderID(for: spot) {
+                                    selectedSpot = SelectedSpot(spot: spot, folderID: folderID)
+                                } else {
+                                    print("❌ Folder not found for this spot")
+                                }
                         }
-                        .padding(6)
-                        .background(.ultraThinMaterial)
-                        .cornerRadius(12)
                     }
                 }
             }
@@ -57,7 +76,7 @@ struct MapView: View {
         .task {
             await updateUserLocation()
         }
-        .onChange(of: store.focusCoordinate, initial: false) { _, newValue in
+        .onChange(of: folderStore.focusCoordinate, initial: false) { _, newValue in
             if let wrapper = newValue {
                 let coord = wrapper.coordinate
                 withAnimation {
@@ -68,9 +87,11 @@ struct MapView: View {
                         )
                     )
                 }
-                store.focusCoordinate = nil
-                // ❗️注意：hasJustAddedSpot 的清除由你控制时机
+                folderStore.focusCoordinate = nil  // ✅ reset
             }
+        }
+        .navigationDestination(item: $selectedSpot) { selected in
+            MemorySpotDetailView(spot: selected.spot, parentFolderID: selected.folderID)
         }
     }
 

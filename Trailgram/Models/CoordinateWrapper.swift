@@ -8,11 +8,13 @@
 import Foundation
 import CoreLocation
 
-struct EquatableCoordinate: Equatable {
+struct CoordinateWrapper: Equatable {
     let coordinate: CLLocationCoordinate2D
 
-    static func == (lhs: EquatableCoordinate, rhs: EquatableCoordinate) -> Bool {
+    static func == (lhs: CoordinateWrapper, rhs: CoordinateWrapper) -> Bool {
         lhs.coordinate.latitude == rhs.coordinate.latitude &&
         lhs.coordinate.longitude == rhs.coordinate.longitude
     }
 }
+
+

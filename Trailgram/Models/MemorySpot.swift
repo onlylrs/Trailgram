@@ -28,6 +28,8 @@ struct MemorySpot: Identifiable, Codable, Hashable {
     }
 }
 
-
-
-
+struct SelectedSpot: Identifiable, Hashable {
+    let id = UUID() // 唯一 ID，只用于 navigation 匹配
+    let spot: MemorySpot
+    let folderID: UUID
+}

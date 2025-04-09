@@ -11,17 +11,17 @@ import Observation
 
 @Observable
 class MemoryStore {
-    var memorySpots: [MemorySpot] = [
-        // Mock 数据
-        MemorySpot(
-            title: "Shibuya Crossing",
-            description: "A must-visit in Tokyo!",
-            coordinate: CLLocationCoordinate2D(latitude: 35.6595, longitude: 139.7005),
-            date: Date()
-        )
-    ]
+//    var memorySpots: [MemorySpot] = [
+//        // Mock 数据
+//        MemorySpot(
+//            title: "Shibuya Crossing",
+//            description: "A must-visit in Tokyo!",
+//            coordinate: CLLocationCoordinate2D(latitude: 35.6595, longitude: 139.7005),
+//            date: Date()
+//        )
+//    ]
     
-    var focusCoordinate: EquatableCoordinate? = nil
+    var focusCoordinate: CoordinateWrapper? = nil
     var hasJustAddedSpot: Bool = false
     var shouldLocateOnLaunch: Bool = true
 
