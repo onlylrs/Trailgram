@@ -30,29 +30,84 @@ struct SpotAnnotation: View {
 struct MapView: View {
     @Environment(MemoryStore.self) var store
     @Environment(FolderStore.self) var folderStore
-
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var isAddingMemory = false
     @State private var selectedSpot: SelectedSpot? = nil
+    @State private var tappedCoordinate: CLLocationCoordinate2D? = nil
+    @State private var tappedScreenPoint: CGPoint? = nil
+    @State private var showAddFromTap: Bool = false
+    @State private var mapProxy: MapProxy? = nil
+    
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            Map(position: $cameraPosition) {
-                ForEach(folderStore.allSpots) { spot in
-                    Annotation(spot.title, coordinate: spot.coordinate) {
-                        SpotAnnotation(spot: spot) {
-                            print("🟢 Annotation clicked: \(spot.title)")
+            
+            MapReader { proxy in
+                
+                Map(position: $cameraPosition) {
+                    ForEach(folderStore.allSpots) { spot in
+                        Annotation(spot.title, coordinate: spot.coordinate) {
+                            SpotAnnotation(spot: spot) {
                                 if let folderID = folderStore.findFolderID(for: spot) {
                                     selectedSpot = SelectedSpot(spot: spot, folderID: folderID)
-                                } else {
-                                    print("❌ Folder not found for this spot")
                                 }
+                            }
                         }
                     }
                 }
+                .ignoresSafeArea()
+                .onAppear{
+                    mapProxy = proxy
+                }
+                .onMapCameraChange { _ in
+                    if tappedCoordinate != nil {
+                        
+                            tappedCoordinate = nil
+                            tappedScreenPoint = nil
+                        
+                    }
+                }
             }
-            .ignoresSafeArea()
+            .gesture(
+                TapGesture()
+                    .onEnded {
+                        
+                            tappedCoordinate = nil
+                            tappedScreenPoint = nil
+                        
+                    }
+            )
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 0.5)
+                    .sequenced(before: DragGesture(minimumDistance: 0))
+                    .onEnded { value in
+                        switch value {
+                        case .second(true, let drag?):
+                            let point = drag.location
+                            if let proxy = mapProxy, let coord = proxy.convert(point, from: .global) {
+                                withAnimation {
+                                    tappedCoordinate = coord
+                                    tappedScreenPoint = point
+                                }
+                            }
+                        default: break
+                        }
+                    }
+            )
 
-            // ✅ 添加按钮
+            if let point = tappedScreenPoint, let coord = tappedCoordinate {
+                Button(action: {
+                    showAddFromTap = true
+                }) {
+                    Label("Add Here", systemImage: "plus.circle.fill")
+                        .padding(8)
+                        .background(.thinMaterial)
+                        .cornerRadius(10)
+                }
+                .position(x: point.x, y: point.y - 30)
+                
+            }
+            
+            // 定位按钮
             Button(action: {
                 Task {
                     await updateUserLocation(force: true)
@@ -67,7 +122,17 @@ struct MapView: View {
             }
             .padding(.trailing, 16)
             .padding(.bottom, 40)
+            
         }
+        
+        .sheet(isPresented: $showAddFromTap, onDismiss: {
+            tappedCoordinate = nil
+            tappedScreenPoint = nil
+        }) {
+            AddMemoryView(prefillCoordinate: tappedCoordinate)
+                .presentationDetents([.medium, .large], selection: .constant(.large))
+        }
+        
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 NavigationLink("＋", destination: AddMemoryView())
@@ -93,8 +158,14 @@ struct MapView: View {
         .navigationDestination(item: $selectedSpot) { selected in
             MemorySpotDetailView(spot: selected.spot, parentFolderID: selected.folderID)
         }
+        
     }
-
+    
+    
+    func convertPointToCoordinate(_ point: CGPoint) -> CLLocationCoordinate2D? {
+        mapProxy?.convert(point, from: .global)
+    }
+    
     func updateUserLocation(force: Bool = false) async {
         let manager = CLLocationManager()
         manager.requestWhenInUseAuthorization()
