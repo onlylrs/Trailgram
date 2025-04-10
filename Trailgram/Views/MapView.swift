@@ -36,7 +36,11 @@ struct MapView: View {
     @State private var tappedCoordinate: CLLocationCoordinate2D? = nil
     @State private var tappedScreenPoint: CGPoint? = nil
     @State private var showAddFromTap: Bool = false
+    @State private var showAddFromButton = false
     @State private var mapProxy: MapProxy? = nil
+    
+    
+    
     
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -53,37 +57,49 @@ struct MapView: View {
                             }
                         }
                     }
+                    
+                    // 定义temp spot长什么样
+                    if let temp = folderStore.tempSpot {
+                        Annotation("Temp Spot", coordinate: temp.coordinate) {
+                            VStack {
+                                Text("📍")
+                            }
+                            .padding(6)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
+                        }
+                    }
+                    
                 }
-                .ignoresSafeArea()
                 .onAppear{
                     mapProxy = proxy
                 }
+                // 滑动屏幕的时候不会出现add here button
                 .onMapCameraChange { _ in
                     if tappedCoordinate != nil {
-                        
                             tappedCoordinate = nil
                             tappedScreenPoint = nil
-                        
                     }
                 }
             }
+            // 单击其他地方的时候就把坐标和屏幕点都设为nil，就不会出现add here button
             .gesture(
                 TapGesture()
                     .onEnded {
-                        
                             tappedCoordinate = nil
                             tappedScreenPoint = nil
-                        
                     }
             )
+            // 长按识别到一个screen point，通过proxy local转换为坐标
             .simultaneousGesture(
-                LongPressGesture(minimumDuration: 0.5)
+                LongPressGesture(minimumDuration: 0.3)
                     .sequenced(before: DragGesture(minimumDistance: 0))
                     .onEnded { value in
                         switch value {
                         case .second(true, let drag?):
                             let point = drag.location
-                            if let proxy = mapProxy, let coord = proxy.convert(point, from: .global) {
+                            if let proxy = mapProxy,
+                               let coord = proxy.convert(point, from: .local){
                                 withAnimation {
                                     tappedCoordinate = coord
                                     tappedScreenPoint = point
@@ -94,16 +110,22 @@ struct MapView: View {
                     }
             )
 
-            if let point = tappedScreenPoint, let coord = tappedCoordinate {
+            // 当长按一个位置时这俩变量都会有值，所以弹出add here button，定义了点击这个button就出现temp spot并出现新建表单
+            if let point = tappedScreenPoint, let _ = tappedCoordinate {
                 Button(action: {
+                    if let coord = tappedCoordinate {
+                            let tempSpot = MemorySpot(title: "New Spot", description: "", coordinate: coord)
+                            folderStore.tempSpot = tempSpot
+                    }
                     showAddFromTap = true
                 }) {
                     Label("Add Here", systemImage: "plus.circle.fill")
                         .padding(8)
                         .background(.thinMaterial)
                         .cornerRadius(10)
+                        .opacity(0.8)
                 }
-                .position(x: point.x, y: point.y - 30)
+                .position(x: point.x, y: point.y - 40)
                 
             }
             
@@ -125,19 +147,43 @@ struct MapView: View {
             
         }
         
+        // 显示添加spot单
         .sheet(isPresented: $showAddFromTap, onDismiss: {
             tappedCoordinate = nil
             tappedScreenPoint = nil
+            folderStore.tempSpot = nil
         }) {
             AddMemoryView(prefillCoordinate: tappedCoordinate)
-                .presentationDetents([.medium, .large], selection: .constant(.large))
+                .presentationDetents([.fraction(0.33), .large], selection: .constant(.fraction(0.33)))
         }
         
+        // 定义右上角+键的作用：把显示创建表单条件设为true，并且自动把图拉回current location
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                NavigationLink("＋", destination: AddMemoryView())
+                Button(action: {
+                    if let location = CLLocationManager().location {
+                        let coord = location.coordinate
+                        let tempSpot = MemorySpot(title: "New Spot", description: "", coordinate: coord)
+                        folderStore.tempSpot = tempSpot
+                        withAnimation {
+                            cameraPosition = .region(MKCoordinateRegion(center: coord, span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)))
+                        }
+                    }
+                    showAddFromButton = true
+                }) {
+                    Image(systemName: "plus")
+                }
             }
         }
+        // 创建new spot的表单，消失时让temp spot不显示。
+        .sheet(isPresented: $showAddFromButton, onDismiss:{
+            folderStore.tempSpot = nil
+        }) {
+            AddMemoryView(prefillCoordinate: nil)
+                .presentationDetents([.large, .fraction(0.33)], selection: .constant(.fraction(0.33)))
+                .presentationDragIndicator(.visible)
+        }
+        
         .task {
             await updateUserLocation()
         }
@@ -152,7 +198,7 @@ struct MapView: View {
                         )
                     )
                 }
-                folderStore.focusCoordinate = nil  // ✅ reset
+                folderStore.focusCoordinate = nil
             }
         }
         .navigationDestination(item: $selectedSpot) { selected in

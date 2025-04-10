@@ -11,6 +11,7 @@ import Foundation
 class FolderStore {
     var focusCoordinate: CoordinateWrapper? = nil
     var folders: [Folder] = []
+    var tempSpot: MemorySpot? = nil
 
     private let saveURL: URL
 
@@ -29,6 +30,12 @@ class FolderStore {
     }
 
     func addFolder(_ folder: Folder) {
+        folders.append(folder)
+        save()
+    }
+    
+    func addFolder(name: String) {
+        let folder = Folder(name: name)
         folders.append(folder)
         save()
     }

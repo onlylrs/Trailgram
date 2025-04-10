@@ -22,8 +22,14 @@ struct AddMemoryView: View {
     @State private var readableAddress: String = ""
     var prefillCoordinate: CLLocationCoordinate2D? = nil
     
+    var shouldUsePrefill: Bool {
+        prefillCoordinate != nil
+    }
+    
     init(prefillCoordinate: CLLocationCoordinate2D? = nil) {
-            self._selectedCoordinate = State(initialValue: prefillCoordinate)
+        self.prefillCoordinate = prefillCoordinate
+        self._selectedCoordinate = State(initialValue: prefillCoordinate)
+        self._readableAddress = State(initialValue: "")
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 0){
@@ -32,9 +38,11 @@ struct AddMemoryView: View {
                     .font(.title2)
                     .bold()
                 Spacer()
-                Button("Cancel") {
+                Button("Save") {
+                    save()
                     dismiss()
                 }
+                .disabled(title.isEmpty || selectedCoordinate == nil || selectedFolderID == nil)
             }
             .padding()
             Form {
@@ -56,7 +64,7 @@ struct AddMemoryView: View {
                         showSearchView = true
                     }
                     
-                    if let coord = selectedCoordinate {
+                    if selectedCoordinate != nil {
                         Label(readableAddress, systemImage: "mappin.and.ellipse")
                             .font(.callout)
                             .foregroundColor(.secondary)
@@ -72,18 +80,10 @@ struct AddMemoryView: View {
                             .foregroundStyle(.orange)
                     }
                 }
-                
-                
-                Section {
-                    Button("Save Memory Spot") {
-                        save()
-                        dismiss()
-                    }
-                    .disabled(title.isEmpty || selectedCoordinate == nil || selectedFolderID == nil)
-                }
             }
             .onAppear {
-                if let coord = selectedCoordinate {
+                if shouldUsePrefill, let coord = selectedCoordinate {
+                    
                     reverseGeocode(coord) { address in
                         readableAddress = address
                     }
@@ -95,6 +95,8 @@ struct AddMemoryView: View {
                     selectedFolderID = folderStore.folders.first?.id
                 }
             }
+            
+            
             .sheet(isPresented: $showSearchView) {
                 LocationSearchView { coord in
                     selectedCoordinate = coord

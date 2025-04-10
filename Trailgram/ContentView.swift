@@ -17,20 +17,31 @@ struct ContentView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            TabView(selection: $selectedTab) {
+        TabView(selection: $selectedTab) {
+            // ✅ Map 页面独立 NavigationStack
+            NavigationStack {
                 MapView()
-                    .tabItem { Label("Map", systemImage: "map") }
-                    .tag(Tab.map)
-
-                FolderListView()
-                    .tabItem { Label("List", systemImage: "list.bullet") }
-                    .tag(Tab.list)
-
-                Text("Profile coming soon")
-                    .tabItem { Label("Profile", systemImage: "person") }
-                    .tag(Tab.profile)
             }
+            .tabItem {
+                Label("Map", systemImage: "map")
+            }
+            .tag(Tab.map)
+
+            // ✅ List 页面独立 NavigationStack
+            NavigationStack {
+                FolderListView()
+            }
+            .tabItem {
+                Label("List", systemImage: "list.bullet")
+            }
+            .tag(Tab.list)
+
+            // ✅ Profile 页面（可以不包 NavigationStack）
+            Text("Profile coming soon")
+                .tabItem {
+                    Label("Profile", systemImage: "person")
+                }
+                .tag(Tab.profile)
         }
         .environment(store)
         .environment(folderStore)
