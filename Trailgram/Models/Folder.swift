@@ -16,5 +16,12 @@ struct Folder: Identifiable, Codable, Hashable {
         self.id = UUID()
         self.name = name
     }
+    init(id: UUID, name: String, spots: [MemorySpot], children: [Folder]){
+        self.id = id
+        self.name = name
+        self.spots = spots
+        self.children = children
+    }
 }
+
 

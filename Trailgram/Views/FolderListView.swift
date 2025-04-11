@@ -18,7 +18,12 @@ struct FolderListView: View {
     @Environment(FolderStore.self) var folderStore
     @State private var newFolderName: String = ""
     @State private var mode: ListMode = .folders  // 默认是 Folder 模式
-
+    @State private var selectedFolderToRename: Folder?
+    @State private var folderToDelete: Folder?
+    @State private var showRenameAlert = false
+    @State private var showDeleteConfirm = false
+    @State private var renameText: String = ""
+    
     var body: some View {
         VStack {
             // ✅ 顶部 Picker 切换视图
@@ -39,6 +44,28 @@ struct FolderListView: View {
             }
         }
         .navigationTitle("All Spots")
+        .alert("Rename Folder", isPresented: $showRenameAlert, actions: {
+            TextField("New name", text: $renameText)
+            Button("Save") {
+                if let folder = selectedFolderToRename {
+                    var updated = folder
+                    updated.name = renameText
+                    folderStore.updateFolder(updated)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        })
+
+        .alert("Delete this folder?", isPresented: $showDeleteConfirm, actions: {
+            Button("Delete", role: .destructive) {
+                if let folder = folderToDelete {
+                    folderStore.deleteFolder(folder)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        }, message: {
+            Text("All spots and subfolders will be removed.")
+        })
     }
 
     var folderView: some View {
@@ -58,8 +85,20 @@ struct FolderListView: View {
 
             Section(header: Text("Folders")) {
                 ForEach(folderStore.folders) { folder in
-                    NavigationLink(destination: FolderDetailView(folder: folder)) {
+                    NavigationLink(destination: FolderDetailView(folderID: folder.id)) {
                         Label(folder.name, systemImage: "folder.fill")
+                    }
+                    .contextMenu {
+                        Button("Rename") {
+                            selectedFolderToRename = folder
+                            renameText = folder.name
+                            showRenameAlert = true
+                        }
+
+                        Button("Delete", role: .destructive) {
+                            folderToDelete = folder
+                            showDeleteConfirm = true
+                        }
                     }
                 }
             }

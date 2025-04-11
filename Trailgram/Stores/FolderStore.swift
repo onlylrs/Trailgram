@@ -39,6 +39,34 @@ class FolderStore {
         folders.append(folder)
         save()
     }
+    
+    func addFolder(_ name: String, to parentID: UUID) {
+        let newFolder = Folder(id: UUID(), name: name, spots: [], children: [])
+
+        for i in 0..<folders.count {
+            if let updated = insertFolder(newFolder, into: &folders[i], to: parentID) {
+                folders[i] = updated
+                save()
+                return
+            }
+        }
+    }
+    private func insertFolder(_ folder: Folder, into current: inout Folder, to targetID: UUID) -> Folder? {
+        if current.id == targetID {
+            current.children.append(folder)
+            return current
+        }
+
+        for i in 0..<current.children.count {
+            if let updated = insertFolder(folder, into: &current.children[i], to: targetID) {
+                current.children[i] = updated
+                return current
+            }
+        }
+
+        return nil
+    }
+
 
     func updateFolder(_ folder: Folder) {
         if let index = folders.firstIndex(where: { $0.id == folder.id }) {
@@ -51,6 +79,102 @@ class FolderStore {
         folders.removeAll { $0.id == folder.id }
         save()
     }
+    
+    func deleteFolderRecursive(_ folder: Folder) {
+        for i in 0..<folders.count {
+            if let updated = removeFolderRecursive(folder.id, from: &folders[i]) {
+                folders[i] = updated
+                save()
+                return
+            }
+        }
+    }
+
+    private func removeFolderRecursive(_ id: UUID, from folder: inout Folder) -> Folder? {
+        folder.children.removeAll { $0.id == id }
+
+        for i in 0..<folder.children.count {
+            if let updated = removeFolderRecursive(id, from: &folder.children[i]) {
+                folder.children[i] = updated
+            }
+        }
+
+        return folder
+    }
+    
+    func replaceFolder(_ updated: Folder) {
+        for i in 0..<folders.count {
+            if let replaced = replaceFolder(in: &folders[i], with: updated) {
+                folders[i] = replaced
+                save()
+                return
+            }
+        }
+    }
+
+    private func replaceFolder(in current: inout Folder, with updated: Folder) -> Folder? {
+        if current.id == updated.id {
+            return updated
+        }
+        for i in 0..<current.children.count {
+            if let replaced = replaceFolder(in: &current.children[i], with: updated) {
+                current.children[i] = replaced
+                return current
+            }
+        }
+        return nil
+    }
+    
+    func appendSpot(_ spot: MemorySpot, to folderID: UUID) {
+        for i in 0..<folders.count {
+            if let updated = insertSpot(spot, into: &folders[i], to: folderID) {
+                folders[i] = updated
+                save()
+                return
+            }
+        }
+    }
+
+    private func insertSpot(_ spot: MemorySpot, into folder: inout Folder, to targetID: UUID) -> Folder? {
+        if folder.id == targetID {
+            folder.spots.append(spot)
+            return folder
+        }
+        for i in 0..<folder.children.count {
+            if let updated = insertSpot(spot, into: &folder.children[i], to: targetID) {
+                folder.children[i] = updated
+                return folder
+            }
+        }
+        return nil
+    }
+    
+    func updateFolderRecursive(_ updatedFolder: Folder) {
+        for i in 0..<folders.count {
+            if let new = applyUpdate(to: &folders[i], updatedFolder: updatedFolder) {
+                folders[i] = new
+                save()
+                return
+            }
+        }
+    }
+
+    private func applyUpdate(to folder: inout Folder, updatedFolder: Folder) -> Folder? {
+        if folder.id == updatedFolder.id {
+            folder = updatedFolder
+            return folder
+        }
+
+        for i in 0..<folder.children.count {
+            if let new = applyUpdate(to: &folder.children[i], updatedFolder: updatedFolder) {
+                folder.children[i] = new
+                return folder
+            }
+        }
+
+        return nil
+    }
+
 
     func save() {
         do {
@@ -124,5 +248,40 @@ extension FolderStore {
             result += collectSpots(in: child)
         }
         return result
+    }
+}
+
+extension FolderStore {
+    var allFoldersFlat: [Folder] {
+        var result: [Folder] = []
+
+        func collect(from folder: Folder) {
+            result.append(folder)
+            for child in folder.children {
+                collect(from: child)
+            }
+        }
+
+        for folder in folders {
+            collect(from: folder)
+        }
+        return result
+    }
+}
+
+extension FolderStore {
+    var rootFolder: Folder {
+        Folder(id: UUID(), name: "All", spots: [], children: folders)
+    }
+    func folder(at path: [UUID]) -> Folder? {
+        var current = Folder(id: UUID(), name: "All", spots: [], children: folders)
+        for id in path {
+            if let next = current.children.first(where: { $0.id == id }) {
+                current = next
+            } else {
+                return nil
+            }
+        }
+        return current
     }
 }

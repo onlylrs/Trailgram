@@ -18,7 +18,8 @@ struct MemorySpotDetailView: View {
     @Environment(\.dismiss) var dismiss
     @State private var showDeleteConfirm = false
     @State private var readableAddress: String = ""
-
+    @State private var showMoveSuccessAlert = false
+    
     var body: some View {
         Form {
             Section(header: Text("Title")) {
@@ -61,13 +62,16 @@ struct MemorySpotDetailView: View {
                 Button("Move to Folder") {
                     showFolderPicker = true
                 }
-            }
-            .sheet(isPresented: $showFolderPicker) {
-                FolderPickerView { newID in
-                    moveSpot(to: newID)
-                    showFolderPicker = false
+                
+// 这个sheet一定要在该section里面不然就会有第一次点击Move to Folder会先弹出sheet然后立即索回去的情况
+                .sheet(isPresented: $showFolderPicker) {
+                    MoveToFolderView { newID in
+                        moveSpot(to: newID)
+                        showFolderPicker = false
+                    }
                 }
             }
+
             
 
             if isEditing {
@@ -85,6 +89,10 @@ struct MemorySpotDetailView: View {
                 }
             }
         }
+        .alert("Moved Successfully", isPresented: $showMoveSuccessAlert) {
+            Button("OK", role: .cancel) { }
+        }
+        
         .onAppear {
             reverseGeocode(spot.coordinate) { address in
                 readableAddress = address
@@ -133,22 +141,22 @@ struct MemorySpotDetailView: View {
 
     func moveSpot(to newID: UUID) {
         // ✅ 自己移除原来的 spot
-            for i in 0..<folderStore.folders.count {
-                if let updated = removeSpot(spot.id, from: &folderStore.folders[i]) {
-                    folderStore.folders[i] = updated
-                    break
-                }
+        for i in 0..<folderStore.folders.count {
+            if let updated = removeSpot(spot.id, from: &folderStore.folders[i]) {
+                folderStore.folders[i] = updated
+                break
             }
+        }
 
-            // ✅ 插入到新的 folder
-            for i in 0..<folderStore.folders.count {
-                if let updated = insertSpot(spot, into: &folderStore.folders[i], to: newID) {
-                    folderStore.folders[i] = updated
-                    folderStore.save()
-                    break
-                }
+        // ✅ 插入到新的 folder
+        for i in 0..<folderStore.folders.count {
+            if let updated = insertSpot(spot, into: &folderStore.folders[i], to: newID) {
+                folderStore.folders[i] = updated
+                folderStore.save()
+                break
             }
-
+        }
+        showMoveSuccessAlert = true
     }
 
     func removeSpot(_ id: UUID, from folder: inout Folder) -> Folder? {
@@ -179,6 +187,7 @@ struct MemorySpotDetailView: View {
         }
         return nil
     }
+    
 }
 
 

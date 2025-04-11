@@ -106,29 +106,37 @@ struct AddMemoryView: View {
                     showSearchView = false
                 }
             }
+
             .sheet(isPresented: $showFolderPicker) {
-                FolderPickerView { id in
-                    selectedFolderID = id
-                    showFolderPicker = false //有点问题
-                }
+                MoveToFolderView(
+                    onSelect: { id in
+                        selectedFolderID = id
+                        showFolderPicker = false
+                    },
+                    confirmButtonText: "Put Here"
+                )
             }
+
         }
     }
 
+    
     func save() {
         guard let coord = selectedCoordinate,
               let folderID = selectedFolderID else { return }
 
         let newSpot = MemorySpot(title: title, description: note, coordinate: coord)
 
-        for i in 0..<folderStore.folders.count {
-            if folderStore.folders[i].id == folderID {
-                folderStore.folders[i].spots.append(newSpot)
-                folderStore.save()
-                folderStore.focusCoordinate = CoordinateWrapper(coordinate: coord)
-                break
-            }
-        }
+//        for i in 0..<folderStore.folders.count {
+//            if folderStore.folders[i].id == folderID {
+//                folderStore.folders[i].spots.append(newSpot)
+//                folderStore.save()
+//                folderStore.focusCoordinate = CoordinateWrapper(coordinate: coord)
+//                break
+//            }
+//        }
+        folderStore.appendSpot(newSpot, to: folderID)  // ✅ 使用新方法
+        folderStore.focusCoordinate = CoordinateWrapper(coordinate: coord)
     }
 
     func requestCurrentLocation() {
