@@ -102,12 +102,10 @@ struct MemorySpotDetailView: View {
 
     func saveSpot() {
         for i in 0..<folderStore.folders.count {
-            if folderStore.folders[i].id == parentFolderID {
-                if let index = folderStore.folders[i].spots.firstIndex(where: { $0.id == spot.id }) {
-                    folderStore.folders[i].spots[index] = spot
-                    folderStore.save()
-                    break
-                }
+            if let updated = updateSpot(in: &folderStore.folders[i], with: spot) {
+                folderStore.folders[i] = updated
+                folderStore.save()
+                break
             }
         }
     }

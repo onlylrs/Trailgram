@@ -20,7 +20,9 @@ struct MoveToFolderView: View {
             List {
                 ForEach(currentFolder.children) { folder in
                     Button(action: {
-                        folderStack.append(folder)
+                        withAnimation {
+                            folderStack.append(folder)
+                        }
                     }) {
                         Label(folder.name, systemImage: "folder")
                     }
@@ -47,6 +49,10 @@ struct MoveToFolderView: View {
                         .foregroundColor(.secondary)
                 }
             }
+            .id(currentFolder.id) // 👈 每次 folder 变化都重建 List，触发 transition
+            .transition(.move(edge: .trailing)) // 👈 平移效果
+            .animation(.easeInOut(duration: 0.3), value: currentFolder.id) // 👈 添加动画
+            
             .listStyle(.insetGrouped)
             .navigationTitle(currentFolder.name)
             .navigationBarTitleDisplayMode(.inline)
@@ -55,7 +61,9 @@ struct MoveToFolderView: View {
                     HStack {
                         if folderStack.count > 1 {
                             Button(action: {
-                                _ = folderStack.popLast()
+                                withAnimation {
+                                    _ = folderStack.popLast()
+                                }
                             }) {
                                 Label("Back", systemImage: "chevron.left")
                             }
