@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-
+import PhotosUI
 
 struct MemorySpotDetailView: View {
     @Environment(FolderStore.self) var folderStore
@@ -19,6 +19,20 @@ struct MemorySpotDetailView: View {
     @State private var showDeleteConfirm = false
     @State private var readableAddress: String = ""
     @State private var showMoveSuccessAlert = false
+    @State private var showImagePicker = false
+
+    @State private var selectedImageItem: PhotosPickerItem? = nil
+    @State private var image: UIImage? = nil
+    @State private var showFullImageViewer: Bool = false
+    
+    let originalSpot: MemorySpot
+    
+    init(spot: MemorySpot, parentFolderID: UUID) {
+        self.originalSpot = spot
+        self._spot = State(initialValue: spot)
+        self.parentFolderID = parentFolderID
+    }
+    
     
     var body: some View {
         Form {
@@ -33,6 +47,73 @@ struct MemorySpotDetailView: View {
                     .frame(minHeight: 120)
                     .disabled(!isEditing)
             }
+            
+            Section(header: Text("Image")) {
+                VStack(alignment: .leading, spacing: 10) {
+                    if let filename = spot.imagePath {
+                        let url = FileManager.default
+                            .urls(for: .documentDirectory, in: .userDomainMask)
+                            .first!
+                            .appendingPathComponent(filename)
+
+                        if let uiImage = UIImage(contentsOfFile: url.path) {
+                            // 全屏查看
+                            Button(action: {
+                                showFullImageViewer = true
+                            }) {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .cornerRadius(12)
+                            }
+                            .buttonStyle(.plain)
+
+                            // 删除按钮
+                            if isEditing {
+                                Button(role: .destructive) {
+                                    spot.imagePath = nil
+                                } label: {
+                                    Label("Remove Picture", systemImage: "trash")
+                                }
+                            }
+                        } else {
+                            Text("⚠️ Image not found at path.")
+                        }
+
+                    } else {
+                        if isEditing {
+                            PhotosPicker(selection: $selectedImageItem, matching: .images) {
+                                Label("Add Picture", systemImage: "plus")
+                                    .foregroundColor(.blue)
+                            }
+                            .onChange(of: selectedImageItem) { newItem in
+                                if let item = newItem {
+                                    Task {
+                                        if let data = try? await item.loadTransferable(type: Data.self),
+                                           let uiImage = UIImage(data: data) {
+                                            let filename = UUID().uuidString + ".jpg"
+                                            let url = FileManager.default
+                                                .urls(for: .documentDirectory, in: .userDomainMask)
+                                                .first!
+                                                .appendingPathComponent(filename)
+                                            if let jpegData = uiImage.jpegData(compressionQuality: 0.8) {
+                                                try? jpegData.write(to: url)
+                                                spot.imagePath = filename  // ✅ 只存文件名
+                                                print("✅ Saved image to: \(url.path)")
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            Text("No image added")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .padding(.vertical, 5)
+            }
+
 
             Section(header: Text("Location")) {
                 if !readableAddress.isEmpty {
@@ -85,6 +166,9 @@ struct MemorySpotDetailView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(isEditing ? "Cancel" : "Edit") {
+                    if isEditing {
+                        spot = originalSpot  // ✅ 重置 UI 的绑定状态
+                    }
                     isEditing.toggle()
                 }
             }
@@ -98,7 +182,28 @@ struct MemorySpotDetailView: View {
                 readableAddress = address
             }
         }
+        .fullScreenCover(isPresented: $showFullImageViewer) {
+            if let filename = spot.imagePath {
+                let url = FileManager.default
+                    .urls(for: .documentDirectory, in: .userDomainMask)
+                    .first!
+                    .appendingPathComponent(filename)
+
+                if let image = UIImage(contentsOfFile: url.path) {
+                    ZStack {
+                        Color.black.ignoresSafeArea()
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .onTapGesture {
+                                showFullImageViewer = false
+                            }
+                    }
+                }
+            }
+        }
     }
+    
 
     func saveSpot() {
         for i in 0..<folderStore.folders.count {
