@@ -22,6 +22,7 @@ struct ContentView: View {
             NavigationStack {
                 MapView()
             }
+            
             .tabItem {
                 Label("Map", systemImage: "map")
             }
@@ -33,6 +34,14 @@ struct ContentView: View {
             }
             .tabItem {
                 Label("List", systemImage: "list.bullet")
+            }
+            .tag(Tab.list)
+            
+            NavigationStack {
+                TravelPosterView()
+            }
+            .tabItem {
+                Label("Poster", systemImage: "star")
             }
             .tag(Tab.list)
 

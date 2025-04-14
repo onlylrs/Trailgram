@@ -1,35 +1,63 @@
 import SwiftUI
+import Photos
+
 
 struct FullImageViewer: View {
     let imagePaths: [String]
-    let startIndex: Int
-
+    @State var currentIndex: Int
     @Environment(\.dismiss) var dismiss
-    @State private var currentIndex: Int = 0
+    @State private var showSaveAlert = false
 
-    var body: some View {
-        TabView(selection: $currentIndex) {
-            ForEach(imagePaths.indices, id: \.self) { index in
-                ZoomableImageView(imagePath: imagePaths[index])
-                    .tag(index)
+    func saveImageToPhotoLibrary(_ image: UIImage) {
+        PHPhotoLibrary.requestAuthorization { status in
+            if status == .authorized || status == .limited {
+                UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+                print("✅ Image saved to Photos.")
+                showSaveAlert = true
+            } else {
+                print("❌ Photo Library access denied.")
             }
         }
-        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
-        .background(Color.black.ignoresSafeArea())
-        .onAppear {
-            currentIndex = startIndex
-        }
-        .overlay(
-            HStack {
-                Spacer()
-                Button(action: { dismiss() }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.largeTitle)
-                        .foregroundColor(.white)
-                        .padding()
+    }
+    
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
+
+            if let image = UIImage(contentsOfFile: imagePaths[currentIndex]) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .ignoresSafeArea()
+            }
+
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        if let image = UIImage(contentsOfFile: imagePaths[currentIndex]) {
+                            saveImageToPhotoLibrary(image)
+                        }
+                    }) {
+                        Image(systemName: "square.and.arrow.down")
+                            .foregroundColor(.white)
+                            .padding()
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
+                    }
+                    .padding()
                 }
-            }, alignment: .topTrailing
-        )
+                Spacer()
+            }
+        }
+        .alert("Saved to Photos", isPresented: $showSaveAlert) {
+            Button("OK", role: .cancel) {}
+        }
+        .onTapGesture {
+            dismiss()
+        }
+        
+        
     }
 }
 

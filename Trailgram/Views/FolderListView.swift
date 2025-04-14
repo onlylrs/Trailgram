@@ -43,7 +43,7 @@ struct FolderListView: View {
                 allSpotsView
             }
         }
-        .navigationTitle("All Spots")
+        .navigationTitle("Memory Spots")
         .alert("Rename Folder", isPresented: $showRenameAlert, actions: {
             TextField("New name", text: $renameText)
             Button("Save") {

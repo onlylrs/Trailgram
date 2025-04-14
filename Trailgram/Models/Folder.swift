@@ -24,4 +24,14 @@ struct Folder: Identifiable, Codable, Hashable {
     }
 }
 
+extension Folder {
+    var allSpots: [MemorySpot] {
+        var result = spots
+        for child in children {
+            result += child.allSpots
+        }
+        return result
+    }
+}
+
 

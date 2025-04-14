@@ -146,7 +146,8 @@ struct MapView: View {
             .padding(.bottom, 40)
             
         }
-        
+        .navigationTitle("Trailgram")
+        .navigationBarTitleDisplayMode(.inline)
         // 显示添加spot单
         .sheet(isPresented: $showAddFromTap, onDismiss: {
             tappedCoordinate = nil
