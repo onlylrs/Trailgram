@@ -24,7 +24,7 @@ struct TrailgramApp: App {
     
     // register app delegate for Firebase setup
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-
+    @State private var session = UserSession()
 
     var body: some Scene {
         WindowGroup {

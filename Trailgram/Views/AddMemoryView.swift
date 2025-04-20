@@ -21,6 +21,7 @@ struct AddMemoryView: View {
     @State private var showSearchView = false
     @State private var showFolderPicker = false
     @State private var readableAddress: String = ""
+    
     var prefillCoordinate: CLLocationCoordinate2D? = nil
     
     var shouldUsePrefill: Bool {
@@ -88,6 +89,8 @@ struct AddMemoryView: View {
                                 Text("❌ Image not found")
                             }
                         } else {
+                            
+                            
                             PhotosPicker(selection: $selectedImageItem, matching: .images) {
                                 Label("Add Picture", systemImage: "plus")
                                     .foregroundColor(.blue)
@@ -240,6 +243,8 @@ struct AddMemoryView: View {
                     }
         }
     }
+    
+    
 }
 
 

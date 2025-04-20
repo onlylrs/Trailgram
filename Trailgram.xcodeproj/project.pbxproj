@@ -448,6 +448,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Trailgram/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Permit camera access";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Your location is needed.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is needed!";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "We need to save the travel posts to your album";
@@ -480,6 +481,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Trailgram/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Permit camera access";
 				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "Your location is needed.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Your location is needed!";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "We need to save the travel posts to your album";

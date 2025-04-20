@@ -27,7 +27,7 @@ enum HTMLToImageAPI {
         // ✅ Encode HTML body
         let bodyComponents = [
             "html": html,
-            "ms_delay": "1000"
+            "ms_delay": "500"
         ]
 
         let bodyString = bodyComponents

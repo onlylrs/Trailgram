@@ -3,6 +3,8 @@ import SwiftUI
 struct TravelPosterView: View {
     @Environment(FolderStore.self) var folderStore
     @State private var viewModel = TravelPosterViewModel()
+    @State private var showShareSheet = false
+    @State private var imageToShare: UIImage? = nil
 
     var body: some View {
         NavigationStack {
@@ -60,6 +62,15 @@ struct TravelPosterView: View {
                         }
                         .padding()
                     }
+                    if !viewModel.generatedImages.isEmpty {
+                        Button("Share Poster") {
+                            if !viewModel.generatedImages.isEmpty {
+                                ShareHelper.share(image: viewModel.generatedImages)
+                            }
+
+                        }
+                        .padding(.bottom)
+                    }
                 }
 
                 // Clear button
@@ -69,6 +80,7 @@ struct TravelPosterView: View {
 //                .padding(.top)
             }
             .navigationTitle("Travel Posters")
+
             .sheet(isPresented: $showFolderPicker) {
                 MoveToFolderView(onSelect: { id in
                     viewModel.selectedFolderID = id

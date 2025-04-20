@@ -11,6 +11,7 @@ struct ContentView: View {
     @State private var store = MemoryStore()
     @State private var folderStore = FolderStore()
     @State private var selectedTab: Tab = .map
+    @State private var userVM = UserViewModel()
 
     enum Tab {
         case map, list, profile
@@ -46,7 +47,7 @@ struct ContentView: View {
             .tag(Tab.list)
 
             // ✅ Profile 页面（可以不包 NavigationStack）
-            Text("Profile coming soon")
+            ProfileView(userVM: userVM)
                 .tabItem {
                     Label("Profile", systemImage: "person")
                 }
