@@ -1,7 +1,8 @@
 import SwiftUI
 import Photos
 
-
+/// FullImageViewer displays images full-screen with an option to save to Photos.
+/// Used for browsing poster or spot images in fullscreen.
 struct FullImageViewer: View {
     let imagePaths: [String]
     @State var currentIndex: Int
@@ -12,10 +13,10 @@ struct FullImageViewer: View {
         PHPhotoLibrary.requestAuthorization { status in
             if status == .authorized || status == .limited {
                 UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
-                print("✅ Image saved to Photos.")
+                print("Image saved to Photos.")
                 showSaveAlert = true
             } else {
-                print("❌ Photo Library access denied.")
+                print("Photo Library access denied.")
             }
         }
     }
@@ -61,7 +62,7 @@ struct FullImageViewer: View {
     }
 }
 
-
+/// ZoomableImageView allows pinch-to-zoom on a single image.
 struct ZoomableImageView: View {
     let imagePath: String
     @State private var scale: CGFloat = 1.0

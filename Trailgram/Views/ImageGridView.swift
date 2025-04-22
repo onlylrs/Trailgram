@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+/// ImageGridView shows a grid of thumbnail images, each with tap-to-preview and delete context menu.
+/// Includes a button to add new images.
 struct ImageGridView: View {
     var imagePaths: [String]
     var onDelete: (String) -> Void

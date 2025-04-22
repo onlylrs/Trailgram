@@ -1,10 +1,6 @@
-//
-//  FolderStore.swift
-//  Trailgram
-//
-//  Created by 刘闰生 on 8/4/2025.
-//
-
+/// FolderStore is the central state container for all folders and spots in the Trailgram app.
+/// It manages loading, saving, inserting, updating, deleting, and searching folders and their nested contents.
+///
 import Foundation
 
 @Observable
@@ -14,7 +10,9 @@ class FolderStore {
     var tempSpot: MemorySpot? = nil
 
     private let saveURL: URL
-
+    
+    /// Initializes the FolderStore with optional filename.
+    /// Loads folders from local disk; if none are found, creates a default folder.
     init(filename: String = "folders.json") {
         let manager = FileManager.default
         let docs = manager.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -28,18 +26,22 @@ class FolderStore {
                 save()
         }
     }
-
+    
+    /// Adds a top-level folder to the list and saves the change.
     func addFolder(_ folder: Folder) {
         folders.append(folder)
         save()
     }
     
+    /// Adds a top-level folder using a name string.
     func addFolder(name: String) {
         let folder = Folder(name: name)
         folders.append(folder)
         save()
     }
     
+    
+    /// Recursively inserts a new subfolder under the folder with the given parentID.
     func addFolder(_ name: String, to parentID: UUID) {
         let newFolder = Folder(id: UUID(), name: name, spots: [], children: [])
 
@@ -67,7 +69,7 @@ class FolderStore {
         return nil
     }
 
-
+    /// Updates an existing top-level folder (matched by ID) and saves.
     func updateFolder(_ folder: Folder) {
         if let index = folders.firstIndex(where: { $0.id == folder.id }) {
             folders[index] = folder
@@ -75,11 +77,14 @@ class FolderStore {
         }
     }
 
+    /// Removes a top-level folder (non-recursive).
     func deleteFolder(_ folder: Folder) {
         folders.removeAll { $0.id == folder.id }
         save()
     }
     
+    
+    /// Recursively removes a folder from the hierarchy and saves.
     func deleteFolderRecursive(_ folder: Folder) {
         for i in 0..<folders.count {
             if let updated = removeFolderRecursive(folder.id, from: &folders[i]) {
@@ -89,7 +94,6 @@ class FolderStore {
             }
         }
     }
-
     private func removeFolderRecursive(_ id: UUID, from folder: inout Folder) -> Folder? {
         folder.children.removeAll { $0.id == id }
 
@@ -102,6 +106,7 @@ class FolderStore {
         return folder
     }
     
+    /// Replaces a folder (by ID match) recursively across the folder hierarchy and saves.
     func replaceFolder(_ updated: Folder) {
         for i in 0..<folders.count {
             if let replaced = replaceFolder(in: &folders[i], with: updated) {
@@ -111,7 +116,6 @@ class FolderStore {
             }
         }
     }
-
     private func replaceFolder(in current: inout Folder, with updated: Folder) -> Folder? {
         if current.id == updated.id {
             return updated
@@ -125,6 +129,7 @@ class FolderStore {
         return nil
     }
     
+    /// Inserts a MemorySpot into the folder with the given ID, recursively.
     func appendSpot(_ spot: MemorySpot, to folderID: UUID) {
         for i in 0..<folders.count {
             if let updated = insertSpot(spot, into: &folders[i], to: folderID) {
@@ -134,7 +139,6 @@ class FolderStore {
             }
         }
     }
-
     private func insertSpot(_ spot: MemorySpot, into folder: inout Folder, to targetID: UUID) -> Folder? {
         if folder.id == targetID {
             folder.spots.append(spot)
@@ -149,6 +153,7 @@ class FolderStore {
         return nil
     }
     
+    /// Updates a folder's content recursively by ID match.
     func updateFolderRecursive(_ updatedFolder: Folder) {
         for i in 0..<folders.count {
             if let new = applyUpdate(to: &folders[i], updatedFolder: updatedFolder) {
@@ -158,7 +163,6 @@ class FolderStore {
             }
         }
     }
-
     private func applyUpdate(to folder: inout Folder, updatedFolder: Folder) -> Folder? {
         if folder.id == updatedFolder.id {
             folder = updatedFolder
@@ -175,7 +179,7 @@ class FolderStore {
         return nil
     }
 
-
+    /// Saves the current folder structure to local JSON storage.
     func save() {
         do {
             let data = try JSONEncoder().encode(folders)
@@ -186,6 +190,7 @@ class FolderStore {
         }
     }
 
+    /// Loads folders from disk. If none found, initializes an empty list.
     func load() {
         do {
             let data = try Data(contentsOf: saveURL)
@@ -197,6 +202,7 @@ class FolderStore {
         }
     }
     
+    /// Finds the folder ID that contains a given MemorySpot.
     func findFolderID(for spot: MemorySpot) -> UUID? {
         for folder in folders {
             if let found = search(for: spot, in: folder) {
@@ -205,7 +211,6 @@ class FolderStore {
         }
         return nil
     }
-
     private func search(for spot: MemorySpot, in folder: Folder) -> Folder? {
         if folder.spots.contains(where: { $0.id == spot.id }) {
             return folder
@@ -220,11 +225,11 @@ class FolderStore {
         return nil
     }
     
+    /// Returns the folder name for a given ID, if found.
     func name(for id: UUID?) -> String? {
         guard let id else { return nil }
         return searchName(id: id, in: folders)
     }
-
     private func searchName(id: UUID, in folders: [Folder]) -> String? {
         for folder in folders {
             if folder.id == id {
@@ -238,10 +243,11 @@ class FolderStore {
 }
 
 extension FolderStore {
+    
+    /// Returns a list of all spots contained in all folders (recursively).
     var allSpots: [MemorySpot] {
         folders.flatMap { collectSpots(in: $0) }
     }
-
     private func collectSpots(in folder: Folder) -> [MemorySpot] {
         var result = folder.spots
         for child in folder.children {
@@ -252,6 +258,8 @@ extension FolderStore {
 }
 
 extension FolderStore {
+    
+    /// Returns a flat array of all folders (recursively).
     var allFoldersFlat: [Folder] {
         var result: [Folder] = []
 
@@ -270,9 +278,13 @@ extension FolderStore {
 }
 
 extension FolderStore {
+    
+    /// Wraps the folder list into a virtual \"All\" root folder for UI tree navigation.
     var rootFolder: Folder {
         Folder(id: UUID(), name: "All", spots: [], children: folders)
     }
+    
+    /// Reconstructs a specific folder by following a UUID path from the root.
     func folder(at path: [UUID]) -> Folder? {
         var current = Folder(id: UUID(), name: "All", spots: [], children: folders)
         for id in path {

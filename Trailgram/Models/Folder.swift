@@ -6,6 +6,8 @@
 //
 
 import Foundation
+
+/// Represents a user-created folder that holds MemorySpots and potentially nested subfolders.
 struct Folder: Identifiable, Codable, Hashable {
     let id: UUID
     var name: String
@@ -25,6 +27,7 @@ struct Folder: Identifiable, Codable, Hashable {
 }
 
 extension Folder {
+    /// Recursively collects all MemorySpots within this folder and its children.
     var allSpots: [MemorySpot] {
         var result = spots
         for child in children {

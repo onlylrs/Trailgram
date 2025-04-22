@@ -9,22 +9,26 @@ import Foundation
 
 import UIKit
 
+/// A wrapper around the HTMLCSStoImage API for generating images from HTML.
 enum HTMLToImageAPI {
     static let apiKey = "4c884c2f-7648-4629-90fb-5186ffe1a542"
     static let endpoint = URL(string: "https://hcti.io/v1/image")!
     static let userID = "05b0d5c3-c2a2-4ea8-8910-174a56b5dc91"
-
+    
+    /// Sends a POST request to render the given HTML string as an image.
+    /// - Parameter html: The HTML string to render.
+    /// - Returns: A `UIImage` rendered from the HTML.
     static func generateImage(from html: String) async throws -> UIImage {
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         
-        // ✅ Base64 encode: userID:apiKey
+        // Base64 encode: userID:apiKey
         let authString = "\(userID):\(apiKey)"
         let authData = authString.data(using: .utf8)!.base64EncodedString()
         request.setValue("Basic \(authData)", forHTTPHeaderField: "Authorization")
 
-        // ✅ Encode HTML body
+        // Encode HTML body
         let bodyComponents = [
             "html": html,
             "ms_delay": "500"

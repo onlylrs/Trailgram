@@ -1,5 +1,7 @@
 import SwiftUI
 
+/// AuthView handles user login and registration.
+/// It toggles between login and signup modes and calls appropriate Firebase Auth functions via UserViewModel.
 struct AuthView: View {
     @Bindable var userVM: UserViewModel
     @State private var email = ""

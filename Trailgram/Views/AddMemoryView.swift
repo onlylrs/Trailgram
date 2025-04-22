@@ -9,61 +9,48 @@ import SwiftUI
 import CoreLocation
 import PhotosUI
 
+/// AddMemoryView allows users to create a new memory spot with title, notes, location, folder, and optional image.
+/// It supports selecting current location or searching by place, picking from Photos, or adding manually.
 struct AddMemoryView: View {
     @Environment(FolderStore.self) var folderStore
     @Environment(\.dismiss) var dismiss
+    @State private var viewModel = AddMemoryViewModel()
 
-    @State private var title: String = ""
-    @State private var note: String = ""
-    @State private var useCurrentLocation: Bool = true
-    @State private var selectedCoordinate: CLLocationCoordinate2D?
-    @State private var selectedFolderID: UUID?
     @State private var showSearchView = false
     @State private var showFolderPicker = false
-    @State private var readableAddress: String = ""
-    
-    var prefillCoordinate: CLLocationCoordinate2D? = nil
-    
-    var shouldUsePrefill: Bool {
-        prefillCoordinate != nil
-    }
-    
-    @State private var selectedImageItem: PhotosPickerItem? = nil
-    @State private var imagePath: String? = nil
     @State private var showFullImageViewer = false
-    
+
     init(prefillCoordinate: CLLocationCoordinate2D? = nil) {
-        self.prefillCoordinate = prefillCoordinate
-        self._selectedCoordinate = State(initialValue: prefillCoordinate)
-        self._readableAddress = State(initialValue: "")
+        _viewModel = State(initialValue: AddMemoryViewModel(prefillCoordinate: prefillCoordinate))
     }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 0){
+        VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text("New Spot")
                     .font(.title2)
                     .bold()
                 Spacer()
                 Button("Save") {
-                    save()
-                    dismiss()
+                    viewModel.save()
                 }
-                .disabled(title.isEmpty || selectedCoordinate == nil || selectedFolderID == nil)
+                .disabled(viewModel.title.isEmpty || viewModel.selectedCoordinate == nil || viewModel.selectedFolderID == nil)
             }
             .padding()
+
             Form {
                 Section(header: Text("Title")) {
-                    TextField("Enter a title", text: $title)
+                    TextField("Enter a title", text: $viewModel.title)
                 }
-                
+
                 Section(header: Text("Note")) {
-                    TextEditor(text: $note)
+                    TextEditor(text: $viewModel.note)
                         .frame(height: 100)
                 }
-                
+
                 Section(header: Text("Image")) {
                     VStack(alignment: .leading, spacing: 10) {
-                        if let filename = imagePath {
+                        if let filename = viewModel.imagePath {
                             let url = FileManager.default
                                 .urls(for: .documentDirectory, in: .userDomainMask)
                                 .first!
@@ -81,7 +68,7 @@ struct AddMemoryView: View {
                                 .buttonStyle(.plain)
 
                                 Button(role: .destructive) {
-                                    imagePath = nil
+                                    viewModel.imagePath = nil
                                 } label: {
                                     Label("Remove Picture", systemImage: "trash")
                                 }
@@ -89,37 +76,16 @@ struct AddMemoryView: View {
                                 Text("❌ Image not found")
                             }
                         } else {
-                            
-                            
-                            PhotosPicker(selection: $selectedImageItem, matching: .images) {
+
+
+                            PhotosPicker(selection: $viewModel.selectedImageItem, matching: .images) {
                                 Label("Add Picture", systemImage: "plus")
                                     .foregroundColor(.blue)
                             }
-                            .onChange(of: selectedImageItem) { newItem in
-                                if let item = newItem {
-                                    Task {
-                                        do {
-                                            if let data = try? await item.loadTransferable(type: Data.self),
-                                               let uiImage = UIImage(data: data) {
-                                                let filename = UUID().uuidString + ".jpg"
-                                                let url = FileManager.default
-                                                    .urls(for: .documentDirectory, in: .userDomainMask)
-                                                    .first!
-                                                    .appendingPathComponent(filename)
-                                                if let jpegData = uiImage.jpegData(compressionQuality: 0.8) {
-                                                    try? jpegData.write(to: url)
-                                                    imagePath = filename
-                                                    print("✅ Saved image to: \(url.path)")
-                                                } else {
-                                                    print("Failed to convert UIImage to JPEG")
-                                                }
-                                            } else {
-                                                print("❌ Failed to load image data from PhotosPickerItem")
-                                            }
-                                        } catch {
-                                            print("❌ Error loading or saving image: \(error.localizedDescription)")
-                                        }
-                                    }
+                            .onChange(of: viewModel.selectedImageItem) { newItem in
+                                viewModel.selectedImageItem = newItem
+                                Task {
+                                    await viewModel.processSelectedImageItem()
                                 }
                             }
                         }
@@ -127,70 +93,58 @@ struct AddMemoryView: View {
                     .padding(.vertical, 5)
                 }
 
-                
                 Section(header: Text("Location")) {
                     Button("Use Current Location") {
-                        requestCurrentLocation()
+                        viewModel.requestCurrentLocation()
                     }
-                    
+
                     Button("Search Location") {
                         showSearchView = true
                     }
-                    
-                    if selectedCoordinate != nil {
-                        Label(readableAddress, systemImage: "mappin.and.ellipse")
+
+                    if viewModel.selectedCoordinate != nil {
+                        Label(viewModel.readableAddress, systemImage: "mappin.and.ellipse")
                             .font(.callout)
                             .foregroundColor(.secondary)
                     }
                 }
-                
-                
+
                 Section(header: Text("Choose Folder")) {
                     Button {
                         showFolderPicker = true
-                    } label:{
-                        Text(folderStore.name(for: selectedFolderID) ?? "Select Folder")
+                    } label: {
+                        Text(folderStore.name(for: viewModel.selectedFolderID) ?? "Select Folder")
                             .foregroundStyle(.orange)
                     }
                 }
             }
             .onAppear {
-                if shouldUsePrefill, let coord = selectedCoordinate {
-                    
-                    reverseGeocode(coord) { address in
-                        readableAddress = address
-                    }
-                } else {
-                    requestCurrentLocation()
+                viewModel.folderStore = folderStore
+                viewModel.dismissAction = { dismiss() }
+                if viewModel.selectedFolderID == nil {
+                    viewModel.selectedFolderID = folderStore.folders.first?.id
                 }
-                
-                if selectedFolderID == nil {
-                    selectedFolderID = folderStore.folders.first?.id
-                }
+                viewModel.reverseGeocodeIfNeeded()
             }
-            
-            
             .sheet(isPresented: $showSearchView) {
                 LocationSearchView { coord in
-                    selectedCoordinate = coord
-                    reverseGeocode(coord) { address in
-                        readableAddress = address
-                    }
+                    viewModel.selectedCoordinate = coord
+                    viewModel.reverseGeocodeIfNeeded()
                     showSearchView = false
                 }
             }
-
             .sheet(isPresented: $showFolderPicker) {
                 MoveToFolderView(
                     onSelect: { id in
-                        selectedFolderID = id
+                        viewModel.selectedFolderID = id
                         showFolderPicker = false
                     },
                     confirmButtonText: "Put Here"
                 )
             }
+
             .fullScreenCover(isPresented: $showFullImageViewer) {
-                if let filename = imagePath {
+                if let filename = viewModel.imagePath {
                     let url = FileManager.default
                         .urls(for: .documentDirectory, in: .userDomainMask)
                         .first!
@@ -209,43 +163,10 @@ struct AddMemoryView: View {
                     }
                 }
             }
-
         }
     }
-
-    
-    func save() {
-        guard let coord = selectedCoordinate,
-              let folderID = selectedFolderID else { return }
-
-        let newSpot = MemorySpot(title: title, description: note, coordinate: coord, imagePath: imagePath)
-    
-//        for i in 0..<folderStore.folders.count {
-//            if folderStore.folders[i].id == folderID {
-//                folderStore.folders[i].spots.append(newSpot)
-//                folderStore.save()
-//                folderStore.focusCoordinate = CoordinateWrapper(coordinate: coord)
-//                break
-//            }
-//        }
-        folderStore.appendSpot(newSpot, to: folderID)  // ✅ 使用新方法
-        folderStore.focusCoordinate = CoordinateWrapper(coordinate: coord)
-    }
-
-    func requestCurrentLocation() {
-        let manager = CLLocationManager()
-        manager.requestWhenInUseAuthorization()
-        if let location = manager.location {
-            let coord = location.coordinate
-                    selectedCoordinate = coord
-                    reverseGeocode(coord) { address in
-                        readableAddress = address
-                    }
-        }
-    }
-    
-    
 }
+
 
 
 #Preview {

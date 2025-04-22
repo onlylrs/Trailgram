@@ -11,6 +11,7 @@ import Observation
 import CoreLocation
 import FirebaseStorage
 
+/// The ViewModel that manages poster generation logic, including address geocoding, image upload, and API interaction.
 @MainActor
 @Observable
 class TravelPosterViewModel {
@@ -24,6 +25,8 @@ class TravelPosterViewModel {
         generatedImages.map { $0.saveToTemp() }
     }
     
+    /// Generates a travel poster image for each spot in the given folder.
+        /// - Parameter folder: The folder containing spots to generate posters for.
     func generatePosters(for folder: Folder) async {
         isGenerating = true
         generatedImages = []
@@ -93,9 +96,13 @@ class TravelPosterViewModel {
         isGenerating = false
     }
 
+    /// Clears the generated posters.
     func clear() {
         generatedImages = []
     }
+    
+    /// Resolves human-readable addresses for all the given spots and stores them in the address map.
+        /// - Parameter spots: The list of spots to geocode.
     func resolveAddresses(for spots: [MemorySpot]) {
         for spot in spots {
             if addressMap[spot.id] == nil {

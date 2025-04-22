@@ -14,6 +14,8 @@ enum ListMode: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+/// FolderListView displays all top-level folders and optionally all spots in a flat list view.
+/// Includes folder creation, rename, delete, and navigation into folder detail.
 struct FolderListView: View {
     @Environment(FolderStore.self) var folderStore
     @State private var newFolderName: String = ""
@@ -68,6 +70,8 @@ struct FolderListView: View {
         })
     }
 
+    /// folderView contains the folder tree UI.
+    /// allSpotsView renders all memory spots regardless of folder hierarchy.
     var folderView: some View {
         List {
             Section(header: Text("New Folder")) {

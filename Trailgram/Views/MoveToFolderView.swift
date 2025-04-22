@@ -1,5 +1,7 @@
 import SwiftUI
 
+/// MoveToFolderView provides a hierarchical folder browser used to move a spot or poster to a different folder.
+/// Supports recursive navigation and subfolder creation.
 struct MoveToFolderView: View {
     @Environment(FolderStore.self) var folderStore
     @Environment(\.dismiss) var dismiss

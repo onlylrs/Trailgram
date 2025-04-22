@@ -7,13 +7,16 @@
 
 import Foundation
 
+/// Enumerates different visual styles for rendering a MemorySpot as HTML posters.
+/// Used by the HTML-to-image API to generate travel posters.
 enum PosterTemplate: String, CaseIterable, Identifiable {
     case classic
     case pastel
     case card
 
     var id: String { rawValue }
-
+    
+    /// Generates an HTML string for the poster in the selected template style, given a MemorySpot, address, and optional image URL.
     func renderHTML(for spot: MemorySpot, at address: String = "", withImage imageURL: String? = nil) -> String? {
         guard let imageURL = imageURL else { return nil }
 

@@ -7,6 +7,8 @@
 
 import Foundation
 import CoreLocation
+
+/// Converts a CLLocationCoordinate2D into a human-readable address string using reverse geocoding.
 func reverseGeocode(_ coordinate: CLLocationCoordinate2D, completion: @escaping (String) -> Void) {
     let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
     CLGeocoder().reverseGeocodeLocation(location) { placemarks, error in

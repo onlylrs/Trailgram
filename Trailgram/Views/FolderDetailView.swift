@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+/// FolderDetailView displays a specific folder’s children and memory spots.
+/// Allows subfolder creation, renaming, and deletion, as well as spot navigation.
 struct FolderDetailView: View {
     @Environment(FolderStore.self) var folderStore
     var folderID: UUID
@@ -119,6 +121,7 @@ struct FolderDetailView: View {
     }
 }
 
+/// FolderRow is a reusable row view that includes swipe actions for rename and delete.
 struct FolderRow: View {
     var folder: Folder
     var onRename: (Folder) -> Void

@@ -1,5 +1,7 @@
 import SwiftUI
 
+/// TravelPosterView allows users to generate travel posters from selected folders using different templates.
+/// Integrates HTML-to-image API and supports sharing/exporting generated posters.
 struct TravelPosterView: View {
     @Environment(FolderStore.self) var folderStore
     @State private var viewModel = TravelPosterViewModel()
@@ -114,10 +116,10 @@ extension UIImage {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
         do {
             try self.jpegData(compressionQuality: 0.8)?.write(to: url)
-            print("✅ Image saved to temp: \(url.path)")
+            print("Image saved to temp: \(url.path)")
             return url.path
         } catch {
-            print("❌ Failed to save image: \(error.localizedDescription)")
+            print("Failed to save image: \(error.localizedDescription)")
             return ""
         }
     }

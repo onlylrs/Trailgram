@@ -5,9 +5,13 @@
 //  Created by 刘闰生 on 8/4/2025.
 //
 
+
+
 import Foundation
 import CoreLocation
 
+
+/// A Codable wrapper around CLLocationCoordinate2D to enable easy encoding/decoding for persistence.
 struct CodableCoordinate: Codable, Hashable {
     var latitude: Double
     var longitude: Double

@@ -8,6 +8,8 @@
 import Foundation
 import CoreLocation
 
+/// A lightweight wrapper used to compare coordinates with Equatable conformance.
+/// Useful when CLLocationCoordinate2D alone doesn't conform to Equatable.
 struct CoordinateWrapper: Equatable {
     let coordinate: CLLocationCoordinate2D
 

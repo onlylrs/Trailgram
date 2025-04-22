@@ -8,6 +8,7 @@
 import Foundation
 import CoreLocation
 
+/// Represents a single memory spot with title, description, location, timestamp, and optional image.
 struct MemorySpot: Identifiable, Codable, Hashable {
     let id: UUID
     var title: String
@@ -57,6 +58,7 @@ struct MemorySpot: Identifiable, Codable, Hashable {
     }
 }
 
+/// Used to track a selected MemorySpot along with the folder it belongs to.
 struct SelectedSpot: Identifiable, Hashable {
     let id = UUID() // 唯一 ID，只用于 navigation 匹配
     let spot: MemorySpot

@@ -9,6 +9,7 @@ import Foundation
 import FirebaseStorage
 import UIKit
 
+/// A singleton manager for uploading images to Firebase Storage.
 class FirebaseStorageManager {
     static let shared = FirebaseStorageManager()
     private let storage = Storage.storage()
@@ -45,20 +46,10 @@ class FirebaseStorageManager {
             }
         }
     }
-//    func uploadImageAsync(_ image: UIImage) async throws -> String {
-//        let storageRef = Storage.storage().reference()
-//        let filename = "posters/\(UUID().uuidString).jpg"
-//        let imageRef = storageRef.child(filename)
-//
-//        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
-//            throw URLError(.cannotDecodeContentData)
-//        }
-//
-//        // putDataAsync 是 Firebase 的 async 方法（需要 Firebase SDK 支持 iOS concurrency）
-//        _ = try await imageRef.putDataAsync(imageData, metadata: nil)
-//        let url = try await imageRef.downloadURL()
-//        return url.absoluteString
-//    }
+    
+    /// Uploads a UIImage asynchronously and returns a public download URL as a string.
+        /// - Parameter image: The UIImage to upload.
+        /// - Returns: A download URL string for the uploaded image.
     func uploadImageAsync(_ image: UIImage) async throws -> String {
         let storageRef = Storage.storage().reference()
         let imageName = UUID().uuidString + ".jpg"

@@ -9,6 +9,8 @@ import SwiftUI
 import MapKit
 import Observation
 
+/// LocationSearchView lets users search for a place using MapKit's MKLocalSearchCompleter.
+/// Selecting a location triggers a callback with the coordinate.
 @Observable
 class LocalSearchManager {
     var results: [MKLocalSearchCompletion] = []
@@ -29,7 +31,8 @@ class LocalSearchManager {
 }
 
 
-
+/// LocalSearchManager manages search completions using a delegate wrapper.
+/// Used as @Observable to bind results to SwiftUI view.
 class SearchDelegateWrapper: NSObject, MKLocalSearchCompleterDelegate {
     weak var manager: LocalSearchManager?
 

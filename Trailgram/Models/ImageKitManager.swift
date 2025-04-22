@@ -8,12 +8,16 @@
 import Foundation
 import UIKit
 
+/// A singleton service responsible for uploading images to ImageKit using multipart form-data.
+/// This includes building authorization headers and handling server responses.
 class ImageKitManager {
     static let shared = ImageKitManager()
 
     private let uploadURL = URL(string: "https://upload.imagekit.io/api/v1/files/upload")!
     private let privateKey = "private_+/JyfgGTO6iTL9lPvzZjUNgkek4="
 
+    /// Uploads a given UIImage to ImageKit and returns the remote URL string.
+    /// Throws if encoding or upload fails.
     func uploadImage(_ image: UIImage, fileName: String = UUID().uuidString + ".jpg") async throws -> String {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
             throw NSError(domain: "ImageEncoding", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unable to encode image"])

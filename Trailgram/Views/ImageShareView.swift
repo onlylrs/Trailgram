@@ -8,34 +8,34 @@
 import SwiftUI
 import UIKit
 
+/// ImageShareView wraps a UIKit UIActivityViewController to allow image sharing in SwiftUI.
+/// Includes ShareHelper for use outside of views (e.g., ViewModel or Manager).
+struct ImageShareView: UIViewControllerRepresentable {
+    let image: UIImage
 
-//class ShareHelper {
-//    static func share(image: UIImage) {
-//        guard let root = UIApplication.shared.connectedScenes
-//                .compactMap({ $0 as? UIWindowScene })
-//                .flatMap({ $0.windows })
-//                .first(where: { $0.isKeyWindow })?.rootViewController else {
-//            print("❌ No rootViewController found")
-//            return
-//        }
-//
-//        let activityVC = UIActivityViewController(activityItems: [image], applicationActivities: nil)
-//        root.present(activityVC, animated: true)
-//    }
-//}
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let items: [Any] = [image] // 可以加字符串、URL 等
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
+
 class ShareHelper {
     
-    /// 分享单张图片
+    /// share one image
     static func share(image: UIImage) {
         share(items: [image])
     }
 
-    /// 分享多张图片
+    /// share multiple images
     static func share(image: [UIImage]) {
         share(items: image)
     }
 
-    /// 分享任意内容（图像、文本、URL）
+    /// share any contents (text, urls, ...)
     static func share(items: [Any]) {
         guard let root = UIApplication.shared.connectedScenes
             .compactMap({ $0 as? UIWindowScene })
@@ -50,20 +50,4 @@ class ShareHelper {
 
         root.present(activityVC, animated: true)
     }
-}
-
-struct ImageShareView: UIViewControllerRepresentable {
-    let image: UIImage
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        let items: [Any] = [image] // 可以加字符串、URL 等
-        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
-        return controller
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
-
-#Preview {
-//    ImageShareView()
 }

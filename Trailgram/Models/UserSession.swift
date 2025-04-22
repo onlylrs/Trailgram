@@ -8,6 +8,8 @@
 import Foundation
 import Observation
 
+/// Holds a reactive user session (auth state) that can be observed across the app.
+/// Internally delegates to UserViewModel.
 @Observable
 class UserSession {
     var userVM = UserViewModel()

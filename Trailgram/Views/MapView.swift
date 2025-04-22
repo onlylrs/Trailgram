@@ -7,6 +7,7 @@
 
 import SwiftUI
 import MapKit
+/// SpotAnnotation is a custom map annotation view with emoji and title.
 struct SpotAnnotation: View {
     let spot: MemorySpot
     let action: () -> Void
@@ -26,7 +27,9 @@ struct SpotAnnotation: View {
     }
 }
 
-
+/// MapView displays all memory spots on a MapKit map.
+/// Supports long-press to drop a temporary pin and add a new spot.
+/// Includes toolbar button to center on current location and tap-to-select annotation navigation.
 struct MapView: View {
     @Environment(MemoryStore.self) var store
     @Environment(FolderStore.self) var folderStore
@@ -38,8 +41,6 @@ struct MapView: View {
     @State private var showAddFromTap: Bool = false
     @State private var showAddFromButton = false
     @State private var mapProxy: MapProxy? = nil
-    
-    
     
     
     var body: some View {

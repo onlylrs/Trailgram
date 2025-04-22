@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+/// ProfileView shows the logged-in user's information and allows logout.
+/// If not logged in, it shows the login/registration form.
 struct ProfileView: View {
     @Bindable var userVM: UserViewModel
         @State private var name = ""

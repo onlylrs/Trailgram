@@ -8,6 +8,8 @@
 import SwiftUI
 import PhotosUI
 
+/// MemorySpotDetailView displays details of a single memory spot.
+/// Allows editing, deleting, moving to another folder, and full-screen image viewing.
 struct MemorySpotDetailView: View {
     @Environment(FolderStore.self) var folderStore
 
@@ -98,8 +100,8 @@ struct MemorySpotDetailView: View {
                                                 .appendingPathComponent(filename)
                                             if let jpegData = uiImage.jpegData(compressionQuality: 0.8) {
                                                 try? jpegData.write(to: url)
-                                                spot.imagePath = filename  // ✅ 只存文件名
-                                                print("✅ Saved image to: \(url.path)")
+                                                spot.imagePath = filename  // 只存文件名
+                                                print("Saved image to: \(url.path)")
                                             }
                                         }
                                     }
@@ -167,7 +169,7 @@ struct MemorySpotDetailView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(isEditing ? "Cancel" : "Edit") {
                     if isEditing {
-                        spot = originalSpot  // ✅ 重置 UI 的绑定状态
+                        spot = originalSpot  // 重置 UI 的绑定状态
                     }
                     isEditing.toggle()
                 }
@@ -243,7 +245,7 @@ struct MemorySpotDetailView: View {
     }
 
     func moveSpot(to newID: UUID) {
-        // ✅ 自己移除原来的 spot
+        // 自己移除原来的 spot
         for i in 0..<folderStore.folders.count {
             if let updated = removeSpot(spot.id, from: &folderStore.folders[i]) {
                 folderStore.folders[i] = updated
@@ -251,7 +253,7 @@ struct MemorySpotDetailView: View {
             }
         }
 
-        // ✅ 插入到新的 folder
+        // 插入到新的 folder
         for i in 0..<folderStore.folders.count {
             if let updated = insertSpot(spot, into: &folderStore.folders[i], to: newID) {
                 folderStore.folders[i] = updated
